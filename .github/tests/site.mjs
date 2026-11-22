@@ -30,6 +30,16 @@ for (const engine of [chromium, firefox, webkit]) {
       }
       const menu = await (await page.request.get(site + 'menu.json')).json();
       assert.equal(await page.locator('.item').count(), menu.items.length);
+      assert.equal(await page.locator('.dish-thumbnail').count(), menu.items.filter(item => item.photo).length);
+      for (const photo of await page.locator('.dish-thumbnail').all()) {
+        await photo.scrollIntoViewIfNeeded();
+        await photo.evaluate(image => image.decode());
+      }
+      if (engine === chromium && [390, 1440].includes(width)) {
+        await page.locator('#items').scrollIntoViewIfNeeded();
+        await page.locator('.item').first().evaluate(card => card.scrollIntoView({ block: 'start' }));
+        await page.screenshot({ path: 'results/menu-' + width + '.png' });
+      }
       for (const category of menu.categories) {
         await page.locator('[data-category]').filter({ hasText: category }).click();
         assert.equal(await page.locator('.item').count(), menu.items.filter(item => item.section === category).length);
