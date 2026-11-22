@@ -33,7 +33,10 @@ for (const engine of [chromium, firefox, webkit]) {
       assert.equal(await page.locator('.dish-thumbnail').count(), menu.items.filter(item => item.photo).length);
       for (const photo of await page.locator('.dish-thumbnail').all()) {
         await photo.scrollIntoViewIfNeeded();
-        await photo.evaluate(image => image.decode());
+        const source = await photo.getAttribute('src');
+        await page.waitForFunction(path => Array.from(document.images).some(image =>
+          image.getAttribute('src') === path && image.complete && image.naturalWidth > 0
+        ), source, { timeout: 10000 });
       }
       if (engine === chromium && [390, 1440].includes(width)) {
         await page.locator('#items').scrollIntoViewIfNeeded();
