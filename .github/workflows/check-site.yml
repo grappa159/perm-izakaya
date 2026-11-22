@@ -1,0 +1,31 @@
+name: Check published restaurant site
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-save --no-package-lock playwright@1.65.1 lighthouse@13.6.0
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: node .github/tests/site.mjs
+      - name: Measure mobile loading
+        if: always()
+        run: |
+          mkdir -p results
+          export CHROME_PATH="$(node -p "require('playwright').chromium.executablePath()")"
+          npx lighthouse https://grappa159.github.io/perm-izakaya/ --only-categories=performance --output=json --output-path=results/performance.json --chrome-flags="--headless --no-sandbox" --quiet
+          node -e "const r=require('./results/performance.json');console.log('Performance',r.categories.performance.score,'LCP ms',r.audits['largest-contentful-paint'].numericValue,'CLS',r.audits['cumulative-layout-shift'].numericValue)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: site-check
+          path: results
+          retention-days: 7
