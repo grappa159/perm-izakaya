@@ -1,0 +1,10 @@
+(()=>{'use strict';
+const status=document.getElementById('hours-status');
+function getPermTime(date){const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Yekaterinburg',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);const get=type=>parts.find(p=>p.type===type).value;return {day:get('weekday'),minutes:Number(get('hour'))*60+Number(get('minute'))}}
+function updateHours(){const now=getPermTime(new Date()),close=now.day==='Fri'||now.day==='Sat'?23*60:21*60,open=now.minutes>=12*60&&now.minutes<close;status.dataset.open=String(open);status.textContent=open?`По расписанию открыто до ${close===1380?'23:00':'21:00'}`:now.minutes<720?'По расписанию откроется в 12:00':'По расписанию сегодня закрыто'}
+try{updateHours();setInterval(updateHours,60000)}catch(e){status.hidden=true}
+const dialog=document.getElementById('photo-dialog'),image=document.getElementById('photo-dialog-image'),caption=document.getElementById('photo-dialog-caption');let opener=null;
+document.querySelectorAll('.gallery-item').forEach(button=>button.addEventListener('click',()=>{const photo=button.querySelector('img');opener=button;image.src=photo.currentSrc||photo.src;image.alt=photo.alt;caption.textContent=photo.alt;if(typeof dialog.showModal==='function')dialog.showModal();else window.location.href=photo.src}));
+document.getElementById('photo-dialog-close').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});dialog.addEventListener('close',()=>{if(opener)opener.focus()});
+if('IntersectionObserver'in window&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){const elements=document.querySelectorAll('.intro,.catalog h2,.visit-grid,.gallery-grid');const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target)}}),{rootMargin:'0px 0px -5% 0px',threshold:.05});elements.forEach(element=>{element.classList.add('feature-reveal');observer.observe(element)})}
+})();
